@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Valentine's Day</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #fdf2f5;
+            --env-body: #f06292;
+            --env-lid: #f48fb1;
+            --wax-color: #e91e63;
+            --paper-color: #ffffff;
+            --text-color: #444444;
+        }
+
+        /* 2. 禁用頁面滾動的核心設定 */
+        body, html {
+            margin: 0; padding: 0; 
+            width: 100%; height: 100%; 
+            overflow: hidden; /* 禁止溢出 */
+            position: fixed;  /* 強制鎖定畫布 */
+            touch-action: none; /* 禁止瀏覽器預設滑動行為 (重要) */
+            background-color: var(--bg-color);
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Zhi Mang Xing', 'Kaiti TC', 'DFKai-SB', 'BiauKai', 'STKaiti', serif;
+        }
+
+        .hint {
+            position: absolute; top: 10%; color: #ad1457;
+            font-size: 1.2rem; animation: bounce 2s infinite;
+            pointer-events: none; width: 100%; text-align: center;
+        }
+
+        .envelope-container {
+            position: relative; width: 320px; height: 210px;
+            z-index: 10;
+        }
+
+        .envelope {
+            position: relative; width: 100%; height: 100%;
+            background-color: var(--env-body);
+            border-radius: 0 0 5px 5px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            display: flex; justify-content: center;
+        }
+
+        .envelope::after {
+            content: ""; position: absolute; inset: 10px;
+            border: 2px dashed rgba(255,255,255,0.5);
+            border-radius: 4px; pointer-events: none; z-index: 40;
+        }
+
+        .lid {
+            position: absolute; top: 0; left: 0; width: 0; height: 0;
+            border-left: 160px solid transparent;
+            border-right: 160px solid transparent;
+            border-top: 115px solid var(--env-lid);
+            transform-origin: top;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
+        }
+
+        /* 1. 修正：縮小字體並調整位置確保不超出 */
+        .lid-text {
+            position: absolute; 
+            top: -100px;       /* 稍微往下移一點 */
+            left: -160px;     /* 基於 border hack 的中心點偏移 */
+            width: 320px;     /* 寬度與信封一致 */
+            text-align: center;
+            font-family: 'Great Vibes', cursive; 
+            font-size: 24px;  /* 字體縮小，避免超出 */
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            pointer-events: none;
+        }
+
+        .heart-seal {
+            position: absolute; top: 85px; left: 50%; transform: translateX(-50%);
+            width: 60px; height: 60px;
+            background-color: var(--wax-color);
+            z-index: 60; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.4s ease;
+        }
+        
+        .heart-seal::before {
+            content: ""; position: absolute; width: 34px; height: 34px;
+            background-color: #ff80ab; top: 15px;
+            clip-path: path('M17 31.5L14.9 29.6C7.5 22.9 2.5 18.3 2.5 12.7 2.5 8.1 6.1 4.5 10.7 4.5 13.3 4.5 15.8 5.7 17 7.6 18.2 5.7 20.7 4.5 23.3 4.5 27.9 4.5 31.5 8.1 31.5 12.7c0 5.6-5 10.2-12.4 16.9L17 31.5z');
+        }
+
+        /* 3. 修正：信紙排版與溢出處理 */
+        .letter {
+            position: absolute; 
+            top: 10px; bottom: 10px; /* 上下留邊 */
+            left: 10px; right: 10px; /* 左右留邊 */
+            background: var(--paper-color);
+            /* 減少上方 Padding，讓文字往上對齊 */
+            padding: 0px 15px; 
+            box-sizing: border-box;
+            border-radius: 4px;
+            z-index: 10; opacity: 0;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.1), opacity 0.3s;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; justify-content: flex-start;
+            
+            /* 關鍵：防止文字超出信紙 */
+            overflow: hidden; 
+        }
+
+        /* 如果文字真的太多，允許信紙內部捲動，但隱藏捲軸 */
+        .letter-content {
+            width: 100%; height: 100%;
+            font-size: 1.15rem; /* 字體適中 */
+            color: var(--text-color); 
+            line-height: 1;
+            text-align: left;
+            white-space: pre-wrap;
+            overflow-y: auto; /* 內容過長可滑動 */
+            scrollbar-width: none; /* Firefox 隱藏捲軸 */
+        }
+        .letter-content::-webkit-scrollbar { display: none; /* Chrome/Safari 隱藏捲軸 */ }
+
+        /* 開信動畫 */
+        .open .lid { transform: rotateX(180deg); z-index: 0; }
+        .open .heart-seal { opacity: 0; transform: translateX(-50%) scale(0.5); }
+        .open .letter { opacity: 1; transform: translateY(-180px); z-index: 30; }
+
+        .particle {
+            position: absolute; pointer-events: none; z-index: 100;
+            font-size: 20px; color: #ff4081; animation: fly 1.5s ease-out forwards;
+        }
+        @keyframes fly {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(0); opacity: 0; }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hint">上滑拆信封 💌</div>
+
+    <div class="envelope-container" id="container">
+        <div class="envelope" id="env">
+            <div class="lid">
+                <div class="lid-text">Happy Valentine's Day</div>
+            </div>
+            <div class="heart-seal"></div>
+            <div class="letter">
+                <div class="letter-content">
+茜茜寶貝 情人節快樂
+謝謝你出現在我的生命裡。
+你出現後，平凡的日子都變得特別，生活也開始有了意義。
+你不只是我愛的人，更是我想一直放在心上、好好珍惜的人。
+你值得是間最好的一切❤️
+                我愛你 盧孟煜
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('container');
+        const env = document.getElementById('env');
+        let startY = 0;
+
+        container.addEventListener('touchstart', e => { startY = e.touches[0].pageY; }, {passive: false});
+        
+        container.addEventListener('touchend', e => {
+            let endY = e.changedTouches[0].pageY;
+            let distance = startY - endY;
+            
+            if (distance > 50 && !env.classList.contains('open')) { 
+                env.classList.add('open');
+                document.querySelector('.hint').style.opacity = '0';
+                spawnHearts();
+            } else if (distance < -50) { 
+                env.classList.remove('open');
+            }
+        });
+
+        function spawnHearts() {
+            for (let i = 0; i < 15; i++) {
+                const heart = document.createElement('div');
+                heart.innerHTML = '❤️';
+                heart.className = 'particle';
+                const x = (Math.random() - 0.5) * 350;
+                const y = -(Math.random() * 250 + 80);
+                const r = Math.random() * 360;
+                heart.style.setProperty('--x', `${x}px`);
+                heart.style.setProperty('--y', `${y}px`);
+                heart.style.setProperty('--r', `${r}deg`);
+                heart.style.left = '50%';
+                heart.style.top = '60%'; 
+                container.appendChild(heart);
+                setTimeout(() => heart.remove(), 1500);
+            }
+        }
+    </script>
+</body>
+</html>
